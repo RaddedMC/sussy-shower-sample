@@ -5,6 +5,7 @@ import Switch from "react-switch";
 import { Display } from "react-7-segment-display";
 import { Donut } from "react-dial-knob";
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
+import Rainer from "./rainer";
 
 type userPreset = {
     temp: number,
@@ -23,8 +24,8 @@ export default function Home() {
     const [userTemp, setUserTemp] = useState(41);
     const [userPressure, setUserPressure] = useState(0.69);
 
-    const [actualTemp, setActualTemp] = useState(25);
-    const [actualPressure, setActualPressure] = useState(0);
+    const [pressureCold, setPressureCold] = useState(0);
+    const [pressureHot, setPressureHot] = useState(0);
 
     // We need 3 buttons
     const [storeMode, setStoreMode] = useState(false);
@@ -37,7 +38,6 @@ export default function Home() {
 
     useEffect(() => {
         const storageItem = localStorage.getItem("shower.presets");
-        console.log(storageItem);
         setUserPresets(JSON.parse(storageItem || '{ "presets": [{"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}]}').presets);
     });
 
@@ -48,9 +48,11 @@ export default function Home() {
     }
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-between p-24">
-            <div className="m-auto flex flex-col">
+        <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-orange-200">
 
+            <Rainer numDrops={isOn ? userPressure * 300 : 0}/>
+
+            <div className="m-auto flex flex-col bg-white shadow-xl z-10">
                 {/* TOP row -- controls */}
                 <div className="flex flex-row p-2 border-black border-solid border-2">
                     <p className=" border-black border-solid border-4 w-48 p-2 m-2"><b>S.U.S.</b> Shower Unification System</p>
