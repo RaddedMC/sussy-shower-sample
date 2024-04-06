@@ -6,6 +6,7 @@ import { Display } from "react-7-segment-display";
 import { Donut } from "react-dial-knob";
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
 import Rainer from "./rainer";
+import { cloneDeep } from "lodash";
 
 type userPreset = {
     temp: number,
@@ -38,8 +39,8 @@ export default function Home() {
 
     useEffect(() => {
         const storageItem = localStorage.getItem("shower.presets");
-        setUserPresets(JSON.parse(storageItem || '{ "presets": [{"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}]}').presets);
-    });
+        setUserPresets(JSON.parse(storageItem || '[{"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}]'));
+    }, []);
 
     const setLEDsToCurrent = (offset: number)=>{
         const newLEDs = [false, false, false, false, false, false, false, false, false];
@@ -73,9 +74,6 @@ export default function Home() {
                             step={1}
                             value={Math.round(userPressure* 100)}
                             onValueChange={(value)=>{
-                                if (!storeMode) {
-                                    setUserLEDs([false, false, false, false, false, false, false, false]);
-                                }
                                 setUserPressure(value / 100)
                             }}
                         >
@@ -97,9 +95,6 @@ export default function Home() {
                             step={1}
                             value={Math.round(userTemp)}
                             onValueChange={(value)=>{
-                                if (!storeMode) {
-                                    setUserLEDs([false, false, false, false, false, false, false, false]);
-                                }
                                 setUserTemp(value);
                             }}
                         >
@@ -118,8 +113,8 @@ export default function Home() {
                         <button onClick={()=>{
                             if (currentUser != 0) {
                                 setCurrentUser(currentUser - 1);
-                                setUserTemp(userPresets[currentUser - 1].temp);
-                                setUserTemp(userPresets[currentUser - 1].pressure);
+                                setUserTemp(userPresets[currentUser].temp);
+                                setUserPressure(userPresets[currentUser].pressure);
                                 setLEDsToCurrent(-1);
                             }
                         }} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform active:translate-y-1">&larr;</button>
@@ -147,7 +142,7 @@ export default function Home() {
                             if (currentUser != 8) {
                                 setCurrentUser(currentUser + 1);
                                 setUserTemp(userPresets[currentUser + 1].temp);
-                                setUserTemp(userPresets[currentUser + 1].pressure);
+                                setUserPressure(userPresets[currentUser + 1].pressure);
                                 setLEDsToCurrent(1);
                             }
                         }} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform active:translate-y-1">&rarr;</button>
@@ -161,6 +156,16 @@ export default function Home() {
                             setTimeout(()=>{
                                 setLEDsToCurrent(0);
                             }, 500);
+
+                            const tempPresets = cloneDeep(userPresets);
+                            tempPresets[currentUser] = {
+                                temp: userTemp,
+                                pressure: userPressure
+                            }
+                            setUserPresets(tempPresets);
+
+                            localStorage.setItem("shower.presets", JSON.stringify(tempPresets));
+
                             setStoreMode(false);
                         }
                     }}>STORE</button>
