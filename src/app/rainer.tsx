@@ -1,19 +1,15 @@
 'use client';
 import { motion } from "framer-motion";
 import { ReactNode, useEffect, useState } from "react";
-import {cloneDeep} from "lodash";
 
 export default function Rainer(props: {numDrops: number}) {
-    const [rain, setRain] = useState<ReactNode[]>([]);
+    const [rain, _] = useState<ReactNode[]>([]);
     const {width, height} = useWindowDimensions();
 
     useEffect(()=>{
-        console.log(`Rain amount changed! Current rain: ${rain.length}, New rain: ${props.numDrops}`);
         if (rain.length > props.numDrops) {
-            console.log("Remove rain!");
             rain.splice(-(rain.length - props.numDrops));
         } else {
-            console.log("Add rain!");
             const newRain = [];
             for (let i = 0; i < (props.numDrops - rain.length); i++) {
                 newRain.push(<Rain numDrops={props.numDrops} width={width}/>);
