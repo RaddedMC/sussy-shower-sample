@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Switch from "react-switch";
 import { Display } from "react-7-segment-display";
 import { Donut } from "react-dial-knob";
+import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
+
+type userPreset = {
+    temp: number,
+    pressure: number
+}
 
 export default function Home() {
 
@@ -11,6 +17,7 @@ export default function Home() {
     
     // We need 9 LEDs
     const [currentUser, setCurrentUser] = useState(0); // 0 to 8
+    const [userLEDs, setUserLEDs] = useState([true, false, false, false, false, false, false, false]);
 
     // We need two 7-segs
     const [userTemp, setUserTemp] = useState(41);
@@ -20,9 +27,25 @@ export default function Home() {
     const [actualPressure, setActualPressure] = useState(0);
 
     // We need 3 buttons
+    const [storeMode, setStoreMode] = useState(false);
 
     // We need one switch
     const [isOn, setOn] = useState(false);
+
+    // Some memory to save the user's presets
+    const [userPresets, setUserPresets] = useState<userPreset[]>([{"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}]);
+
+    useEffect(() => {
+        const storageItem = localStorage.getItem("shower.presets");
+        console.log(storageItem);
+        setUserPresets(JSON.parse(storageItem || '{ "presets": [{"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}]}').presets);
+    });
+
+    const setLEDsToCurrent = (offset: number)=>{
+        const newLEDs = [false, false, false, false, false, false, false, false, false];
+        newLEDs[currentUser + offset] = true;
+        setUserLEDs(newLEDs);
+    }
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -31,7 +54,7 @@ export default function Home() {
                 {/* TOP row -- controls */}
                 <div className="flex flex-row p-2 border-black border-solid border-2">
                     <p className=" border-black border-solid border-4 w-48 p-2 m-2"><b>S.U.S.</b> Shower Unification System</p>
-                    <div className="flex flex-col m-2 mx-4 py-2">
+                    <div className="flex flex-col m-2 ml-auto mx-4 py-2">
                         <div className={isOn ? "w-4 h-4 rounded-full bg-green-500 mx-auto" : "w-4 h-4 rounded-full bg-red-500 mx-auto"}></div>
                         <p className="mx-auto my-auto">{isOn ? "ON" : "OFF"}</p>
                     </div>
@@ -47,7 +70,12 @@ export default function Home() {
                             max={99}
                             step={1}
                             value={Math.round(userPressure* 100)}
-                            onValueChange={(value)=>{setUserPressure(value / 100)}}
+                            onValueChange={(value)=>{
+                                if (!storeMode) {
+                                    setUserLEDs([false, false, false, false, false, false, false, false]);
+                                }
+                                setUserPressure(value / 100)
+                            }}
                         >
                         </Donut>
                         <p>Pressure</p>
@@ -66,7 +94,12 @@ export default function Home() {
                             max={47} // Making it hotter than 47 degrees C could burn, we may want to lower this still
                             step={1}
                             value={Math.round(userTemp)}
-                            onValueChange={setUserTemp}
+                            onValueChange={(value)=>{
+                                if (!storeMode) {
+                                    setUserLEDs([false, false, false, false, false, false, false, false]);
+                                }
+                                setUserTemp(value);
+                            }}
                         >
                         </Donut>
                         <p>Temperature</p>
@@ -77,14 +110,89 @@ export default function Home() {
                 </div>
 
                 {/* User controls module */}
-                <div className="flex flex-col p-2 border-black border-solid border-2">
-                    {/* User select buttons */}
-                    <div>
+                <div className="flex flex-col p-2 border-black border-solid border-2 items-center">
+                    <div className="flex flex-row p-2">
+                        {/* LEFT button */}
+                        <button onClick={()=>{
+                            if (currentUser != 0) {
+                                setCurrentUser(currentUser - 1);
+                                setUserTemp(userPresets[currentUser - 1].temp);
+                                setUserTemp(userPresets[currentUser - 1].pressure);
+                                setLEDsToCurrent(-1);
+                            }
+                        }} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform active:translate-y-1">&larr;</button>
 
+                        {/* LEDs */}
+                        <div className="flex flex-row m-2">
+                            {
+                                (()=>{
+                                    const elements = [];
+
+                                    for (let i = 0; i < 9; i++) {
+                                        elements.push(<div key={i} className="flex flex-col items-center mx-1">
+                                            <AccessibilityNewIcon className={ userLEDs[i] ? "text-red-500" : ""}/>
+                                            <p className={userLEDs[i] ? "text-red-500" : ""}>{i+1}</p>
+                                        </div>)
+                                    }
+                                    
+                                    return elements;
+                                })()
+                            }
+                        </div>
+
+                        {/* RIGHT button */}
+                        <button onClick={()=>{
+                            if (currentUser != 8) {
+                                setCurrentUser(currentUser + 1);
+                                setUserTemp(userPresets[currentUser + 1].temp);
+                                setUserTemp(userPresets[currentUser + 1].pressure);
+                                setLEDsToCurrent(1);
+                            }
+                        }} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform active:translate-y-1">&rarr;</button>
                     </div>
-                    <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform active:translate-y-1">STORE</button>
+
+                    {/* STORE button */}
+                    <button className="bg-gray-300 w-full hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform active:translate-y-1" onClick={()=>{
+                        if (!storeMode) {
+                            setStoreMode(true);
+                        } else {
+                            setTimeout(()=>{
+                                setLEDsToCurrent(0);
+                            }, 500);
+                            setStoreMode(false);
+                        }
+                    }}>STORE</button>
                 </div>
             </div>
+            { storeMode ? <ButtonBlinker currentUser={currentUser} setUserLEDs={setUserLEDs} blinkInterval={500}/> : <></>}
         </main>
     );
+}
+
+function ButtonBlinker(props: {currentUser: number, setUserLEDs: (value: boolean[])=>void, blinkInterval: number}) {
+
+    const [reblinkState, setReblinkState] = useState(false); // Just alternates, used to retrigger the useeffect so the newest user is applied
+
+    const turnOffLEDs = ()=>{
+        console.log("turning off LEDs");
+        const newLEDs = [false, false, false, false, false, false, false, false, false];
+        newLEDs[props.currentUser] = true;
+        props.setUserLEDs(newLEDs);
+
+        setTimeout(()=>{
+            turnOnLEDs();
+        }, props.blinkInterval);
+    }
+
+    const turnOnLEDs = ()=>{
+        console.log("turning on LEDs");
+        props.setUserLEDs([true, true, true, true, true, true, true, true, true]);
+        setTimeout(()=>{
+            setReblinkState(!reblinkState);
+        }, props.blinkInterval);
+    }
+
+    useEffect(()=>{turnOffLEDs();}, [reblinkState]);
+
+    return <></>
 }
