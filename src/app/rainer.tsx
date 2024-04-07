@@ -40,7 +40,7 @@ function getWindowDimensions() {
 }
 
 function useWindowDimensions() {
-  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+  const [windowDimensions, setWindowDimensions] = useState<{width: number, height: number}>({width: 0, height: 0});
 
   useEffect(() => {
     function handleResize() {

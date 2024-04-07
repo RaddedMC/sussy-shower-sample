@@ -8,6 +8,7 @@ import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
 import Rainer from "./rainer";
 import { cloneDeep } from "lodash";
 
+
 type userPreset = {
     temp: number,
     pressure: number
@@ -36,6 +37,11 @@ export default function Home() {
 
     // Some memory to save the user's presets
     const [userPresets, setUserPresets] = useState<userPreset[]>([{"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}, {"temp": 41, "pressure": 0.69}]);
+
+    const storeUserPresets = (presets: userPreset[]) => {
+        setUserPresets(presets);
+        localStorage.setItem("shower.presets", JSON.stringify(presets));
+    }
 
     useEffect(() => {
         const storageItem = localStorage.getItem("shower.presets");
@@ -162,10 +168,8 @@ export default function Home() {
                                 temp: userTemp,
                                 pressure: userPressure
                             }
-                            setUserPresets(tempPresets);
-
-                            localStorage.setItem("shower.presets", JSON.stringify(tempPresets));
-
+                            storeUserPresets(tempPresets);
+                            
                             setStoreMode(false);
                         }
                     }}>STORE</button>
